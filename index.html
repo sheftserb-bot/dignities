@@ -229,15 +229,6 @@
           <div class="deg-wrap"><input type="number" id="tmDeg" min="0" max="30" value="5"></div>
         </div>
       </div>
-      <div class="row">
-        <div class="field">
-          <span class="label">Угловой дом: хочет и может действовать (по рецепции)</span>
-          <div class="toggle" id="tmVol">
-            <button data-v="no" class="on">Нет</button>
-            <button data-v="yes">Да</button>
-          </div>
-        </div>
-      </div>
     </div>
     <div id="timingOut"></div>
     <div class="ref-title">Как считается</div>
@@ -538,34 +529,31 @@ function renderTemp(){
 })();
 
 /* ===== Тайминг ===== */
-let tmState={sign:0,house:1,deg:5,vol:false};
+let tmState={sign:0,house:1,deg:5};
 const tmSignsEl=document.getElementById('tmSigns');
 SIGNS.forEach((s,i)=>{const b=document.createElement('div');b.className='sign'+(i===0?' active':'');b.innerHTML='<span class="sym">'+s.sym+'</span>'+s.ru;b.onclick=()=>{tmState.sign=i;[].forEach.call(tmSignsEl.children,(el,j)=>el.classList.toggle('active',j===i));renderTiming();};tmSignsEl.appendChild(b);});
 document.getElementById('tmHouse').oninput=e=>{let v=Math.max(1,Math.min(12,Math.floor(+e.target.value)||1));tmState.house=v;e.target.value=v;renderTiming();};
 document.getElementById('tmDeg').oninput=e=>{let v=Math.max(0,Math.min(30,Math.floor(+e.target.value)||0));tmState.deg=v;e.target.value=v;renderTiming();};
-document.querySelectorAll('#tmVol button').forEach(b=>{b.onclick=()=>{tmState.vol=(b.dataset.v==='yes');document.querySelectorAll('#tmVol button').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderTiming();};});
 function renderTiming(){
   const mod=MODALITY[tmState.sign], ang=angularity(tmState.house);
   const sb=SIGN_BAND[mod];
-  let hb=ANG_BAND[ang], volNote='';
-  if(ang==='angular' && tmState.vol){ hb=1; volNote=' · воля → быстро'; }
+  const hb=ANG_BAND[ang];
   const avg=(sb+hb)/2;
   let band; if(avg<1.5)band=1; else if(avg>2.5)band=3; else band=2;
   document.getElementById('timingOut').innerHTML=
     '<div class="ledger"><div class="ledger-head"><span class="pos verdict-big">'+BAND_WORD[band]+'</span></div>'
     +'<div class="dig"><span class="dname">Число</span><span class="druler">'+tmState.deg+' единиц</span><span class="dnote">градусов до перфекции</span></div>'
     +'<div class="dig"><span class="dname">Знак</span><span class="druler">'+SIGNS[tmState.sign].ru+' — '+MOD_RU[mod]+'</span><span class="dnote">'+BAND_WORD[sb]+'</span></div>'
-    +'<div class="dig"><span class="dname">Дом</span><span class="druler">'+ROM[tmState.house-1]+' — '+ANG_RU[ang]+'</span><span class="dnote">'+BAND_WORD[hb]+volNote+'</span></div></div>'
+    +'<div class="dig"><span class="dname">Дом</span><span class="druler">'+ROM[tmState.house-1]+' — '+ANG_RU[ang]+'</span><span class="dnote">'+BAND_WORD[hb]+'</span></div></div>'
     +'<p class="muted" style="margin-top:.8rem;font-size:.92rem;line-height:1.55;">Единицу — минуты, часы, дни, недели, месяцы или годы — задаёт сам вопрос: у него есть короткий, средний и длинный вариант, идущие подряд (напр. «когда позвонит?» — минуты/часы/дни; «когда выйду замуж?» — недели/месяцы/годы). Интервал выше указывает, <b>какой из трёх</b> взять. Число единиц = градусы до перфекции аспектирующей планеты.</p>';
 }
 (function(){
   document.getElementById('timingRef').innerHTML=
     '<div class="ref-row"><div class="ref-k">Знак</div><div class="ref-v">кардинальный — короткая единица · мутабельный — средняя · фиксированный — длинная</div></div>'
     +'<div class="ref-row"><div class="ref-k">Дом</div><div class="ref-v">угловой — длинная (медленно по природе) · последующий — средняя · падающий — короткая</div></div>'
-    +'<div class="ref-row"><div class="ref-k">Воля</div><div class="ref-v">угловой даёт быстро, если сигнификатор силён и по рецепции хочет действовать</div></div>'
-    +'<div class="ref-row"><div class="ref-k">Комбинация</div><div class="ref-v">одинаковые крайние (длинный+длинный / короткий+короткий) — крайняя единица; любая другая — средняя</div></div>'
+    +'<div class="ref-row"><div class="ref-k">Итог</div><div class="ref-v">если знак и дом оба длинные — берём длинный; оба короткие — короткий; во всех остальных сочетаниях — средний</div></div>'
     +'<div class="ref-row"><div class="ref-k">Чья планета</div><div class="ref-v">берётся только знак и дом аспектирующей (применяющейся) планеты; аспектируемую игнорируем</div></div>'
-    +'<div class="ref-row"><div class="ref-k">Поправки</div><div class="ref-v">двойные знаки (Близнецы, Стрелец, Рыбы) и скорость планеты меняют число единиц, но не саму единицу</div></div>';
+    +'<div class="ref-row"><div class="ref-k">Поправки</div><div class="ref-v">двойные знаки (Близнецы, Стрелец, Рыбы) удлиняют срок; быстрая планета приближает событие, медленная отдаляет. Сдвигается само число, а не масштаб (дни/недели/месяцы)</div></div>';
 })();
 
 /* ===== Справка ===== */
