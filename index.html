@@ -373,11 +373,13 @@ SIGNS.forEach((s,i)=>{
 const selP=document.getElementById('planet');
 for(const k in P){const o=document.createElement('option');o.value=k;o.textContent=P[k].ru;selP.appendChild(o);}
 
+function clampInt(v,lo,hi){v=Math.floor(v);if(isNaN(v))return lo;return Math.max(lo,Math.min(hi,v));}
 const degNum=document.getElementById('degNum'), minNum=document.getElementById('minNum');
-function setDeg(v){v=Math.max(0,Math.min(29,Math.floor(v)||0));state.deg=v;degNum.value=v;render();}
-function setMin(v){v=Math.max(0,Math.min(59,Math.floor(v)||0));state.min=v;minNum.value=v;render();}
-degNum.oninput=e=>setDeg(+e.target.value);
-minNum.oninput=e=>setMin(+e.target.value);
+function readDegMin(){state.deg=(degNum.value==='')?0:clampInt(+degNum.value,0,29);state.min=(minNum.value==='')?0:clampInt(+minNum.value,0,59);render();}
+degNum.addEventListener('input',readDegMin);
+minNum.addEventListener('input',readDegMin);
+degNum.addEventListener('blur',function(){degNum.value=state.deg;});
+minNum.addEventListener('blur',function(){minNum.value=state.min;});
 selP.onchange=e=>{state.planet=e.target.value;render();};
 document.querySelectorAll('#dayNight button').forEach(b=>{
   b.onclick=()=>{state.chart=b.dataset.v;document.querySelectorAll('#dayNight button').forEach(x=>x.classList.remove('on'));b.classList.add('on');render();};
@@ -532,8 +534,12 @@ function renderTemp(){
 let tmState={sign:0,house:1,deg:5};
 const tmSignsEl=document.getElementById('tmSigns');
 SIGNS.forEach((s,i)=>{const b=document.createElement('div');b.className='sign'+(i===0?' active':'');b.innerHTML='<span class="sym">'+s.sym+'</span>'+s.ru;b.onclick=()=>{tmState.sign=i;[].forEach.call(tmSignsEl.children,(el,j)=>el.classList.toggle('active',j===i));renderTiming();};tmSignsEl.appendChild(b);});
-document.getElementById('tmHouse').oninput=e=>{let v=Math.max(1,Math.min(12,Math.floor(+e.target.value)||1));tmState.house=v;e.target.value=v;renderTiming();};
-document.getElementById('tmDeg').oninput=e=>{let v=Math.max(0,Math.min(30,Math.floor(+e.target.value)||0));tmState.deg=v;e.target.value=v;renderTiming();};
+var tmHouseEl=document.getElementById('tmHouse'), tmDegEl=document.getElementById('tmDeg');
+function readTiming(){tmState.house=(tmHouseEl.value==='')?1:clampInt(+tmHouseEl.value,1,12);tmState.deg=(tmDegEl.value==='')?0:clampInt(+tmDegEl.value,0,30);renderTiming();}
+tmHouseEl.addEventListener('input',readTiming);
+tmDegEl.addEventListener('input',readTiming);
+tmHouseEl.addEventListener('blur',function(){tmHouseEl.value=tmState.house;});
+tmDegEl.addEventListener('blur',function(){tmDegEl.value=tmState.deg;});
 function renderTiming(){
   const mod=MODALITY[tmState.sign], ang=angularity(tmState.house);
   const sb=SIGN_BAND[mod];
@@ -581,6 +587,7 @@ function recepLine(a,b){var posa=a.deg+a.min/60;var digs=receptionBy(b.planet,a.
 function readRecep(){var g=function(id){return document.getElementById(id);};function mk(pp,ss,dd,mm,hh){return {planet:g(pp).value,sign:+g(ss).value,deg:Math.max(0,Math.min(29,Math.floor(+g(dd).value)||0)),min:Math.max(0,Math.min(59,Math.floor(+g(mm).value)||0)),house:Math.max(1,Math.min(12,Math.floor(+g(hh).value)||1))};}return [mk('r1p','r1s','r1d','r1m','r1h'),mk('r2p','r2s','r2d','r2m','r2h'),mk('r3p','r3s','r3d','r3m','r3h'),mk('r4p','r4s','r4d','r4m','r4h')];}
 function renderRecep(){var all=readRecep().filter(function(x){return x.planet;});if(all.length<2){document.getElementById('recepOut').innerHTML='<p class="muted">Выбери минимум две планеты.</p>';return;}var lines=[];for(var i=0;i<all.length;i++){for(var j=i+1;j<all.length;j++){if(all[i].planet===all[j].planet)continue;lines.push(recepLine(all[i],all[j]));lines.push(recepLine(all[j],all[i]));}}if(!lines.length){document.getElementById('recepOut').innerHTML='<p class="muted">Выбери разные планеты.</p>';return;}var text=lines.join('\n');document.getElementById('recepOut').innerHTML='<div class="recep-out">'+lines.join('\n')+'</div><button class="copybtn" id="recepCopy">Скопировать</button>';document.getElementById('recepCopy').onclick=function(){if(navigator.clipboard)navigator.clipboard.writeText(text);var btn=document.getElementById('recepCopy');btn.textContent='Скопировано';setTimeout(function(){btn.textContent='Скопировать';},1500);};}
 ['r1p','r1s','r1d','r1m','r1h','r2p','r2s','r2d','r2m','r2h','r3p','r3s','r3d','r3m','r3h','r4p','r4s','r4d','r4m','r4h'].forEach(function(id){var el=document.getElementById(id);el.addEventListener('input',renderRecep);el.addEventListener('change',renderRecep);});
+[['d',0,29],['m',0,59],['h',1,12]].forEach(function(spec){['r1','r2','r3','r4'].forEach(function(pre){var el=document.getElementById(pre+spec[0]);el.addEventListener('blur',function(){el.value=(el.value==='')?spec[1]:clampInt(+el.value,spec[1],spec[2]);renderRecep();});});});
 
 renderTemp(); renderTiming(); renderRecep();
 
